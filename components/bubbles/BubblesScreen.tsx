@@ -5,6 +5,7 @@ import NavBar from '@/components/ui/NavBar'
 import PageShell from '@/components/ui/PageShell'
 import { ALPHABET_DATA } from '@/lib/data'
 import { useSpeech } from '@/hooks/useSpeech'
+import { useKeyboard } from '@/hooks/useKeyboard'
 import { useSound } from '@/components/providers/SoundProvider'
 import { useApp } from '@/components/providers/AppProvider'
 
@@ -61,7 +62,7 @@ export default function BubblesScreen() {
     }
   }, [spawnBubble, setPoppy])
 
-  const popBubble = (id: number, letter: string) => {
+  const popBubble = useCallback((id: number, letter: string) => {
     setBubbles((prev) =>
       prev.map((b) => (b.id === id ? { ...b, popped: true } : b)),
     )
@@ -72,7 +73,22 @@ export default function BubblesScreen() {
     setTimeout(() => {
       setBubbles((prev) => prev.filter((b) => b.id !== id))
     }, 300)
-  }
+  }, [playPop, playDing, speak, setPoppy])
+
+  useKeyboard(
+    useCallback(
+      (event) => {
+        const key = event.key.toUpperCase()
+        if (/^[A-Z]$/.test(key)) {
+          const target = bubbles.find((b) => !b.popped && b.letter === key)
+          if (target) {
+            popBubble(target.id, target.letter)
+          }
+        }
+      },
+      [bubbles, popBubble],
+    ),
+  )
 
   return (
     <PageShell variant="cool">
@@ -80,7 +96,7 @@ export default function BubblesScreen() {
 
       <main className="relative h-[calc(100dvh-4rem)] overflow-hidden">
         <p className="absolute left-0 right-0 top-2 z-10 text-center font-fredoka text-xl text-gray-600">
-          Tap the bubbles! Pop pop pop!
+          Tap or type the letters! Pop pop pop!
         </p>
 
         {bubbles.map((b) => (

@@ -13,12 +13,13 @@ import { useSpeech } from '@/hooks/useSpeech'
 import { APP_NAME } from '@/lib/constants'
 import { getCollectionCount, TOTAL_STICKERS } from '@/lib/collection'
 import { CATEGORIES } from '@/lib/categories'
+import AnimatedBackground from '@/components/home/AnimatedBackground'
 
 /* ── Dashboard cards ── */
 const cards = [
   {
     href: '/alphabet',
-    label: 'Learn ABC',
+    label: 'ABC Forest',
     emoji: '🔤',
     bg: '#FF6B6B',
     shadow: '#C94A4A',
@@ -26,7 +27,7 @@ const cards = [
   },
   {
     href: '/numbers',
-    label: 'Learn 123',
+    label: '123 Mountain',
     emoji: '🔢',
     bg: '#4D96FF',
     shadow: '#2E6FCC',
@@ -51,7 +52,7 @@ const cards = [
   },
   {
     href: '/trace',
-    label: 'Trace',
+    label: 'Trace Valley',
     emoji: '🖍️',
     bg: '#6BCB77',
     shadow: '#3D9E48',
@@ -59,7 +60,7 @@ const cards = [
   },
   {
     href: '/bubbles',
-    label: 'Bubbles',
+    label: 'Bubble Ocean',
     emoji: '🫧',
     bg: '#4ECDC4',
     shadow: '#2A9A93',
@@ -83,17 +84,6 @@ const cards = [
   },
 ]
 
-/* ── Floating decorations ── */
-const floaties = [
-  { shape: '⭐', x: '6%', y: '15%', size: 22, delay: 0, duration: 7 },
-  { shape: '✨', x: '82%', y: '15%', size: 18, delay: 1, duration: 9 },
-  { shape: '🌸', x: '70%', y: '50%', size: 20, delay: 2, duration: 8 },
-  { shape: '💫', x: '15%', y: '62%', size: 18, delay: 3, duration: 10 },
-  { shape: '🌈', x: '45%', y: '8%', size: 22, delay: 0.5, duration: 8 },
-  { shape: '🦋', x: '88%', y: '68%', size: 18, delay: 4, duration: 9 },
-  { shape: '💜', x: '5%', y: '82%', size: 14, delay: 1.5, duration: 11 },
-  { shape: '🎵', x: '78%', y: '28%', size: 14, delay: 2.5, duration: 7 },
-]
 
 export default function HomePage() {
   const router = useRouter()
@@ -148,24 +138,8 @@ export default function HomePage() {
 
   return (
     <PageShell variant="home">
-      {/* Floating decorations */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden="true">
-        {floaties.map((f, i) => (
-          <span
-            key={i}
-            className="absolute float-drift"
-            style={{
-              left: f.x, top: f.y,
-              fontSize: f.size,
-              animationDelay: `${f.delay}s`,
-              animationDuration: `${f.duration}s`,
-              opacity: 0.35,
-            }}
-          >
-            {f.shape}
-          </span>
-        ))}
-      </div>
+      <AnimatedBackground />
+
 
       <NameModal
         open={nameOpen}
@@ -177,22 +151,22 @@ export default function HomePage() {
       <main className="relative z-10 flex min-h-[100dvh] flex-col items-center px-4 pt-5 pb-36 lg:px-8">
 
         {/* Top row: title + music toggle */}
-        <div className="flex w-full max-w-sm items-start justify-between mb-4 lg:max-w-3xl">
-          <div className="hero-entrance">
-            <p className="font-nunito text-[10px] font-bold uppercase tracking-widest text-purple-400">
-              ✨ Welcome to ✨
+        <div className="flex w-full max-w-sm items-center justify-between mb-8 lg:max-w-3xl relative z-20 mt-4">
+          <div className="hero-entrance flex flex-col justify-center">
+            <p className="font-nunito text-[12px] font-bold uppercase tracking-widest text-purple-600 mb-1 opacity-90">
+              ✨ Welcome to
             </p>
-            <h1 className="font-fredoka text-4xl leading-tight text-shimmer sm:text-5xl lg:text-6xl">
+            <h1 className="font-fredoka text-5xl sm:text-6xl lg:text-7xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B6B] via-[#A855F7] to-[#4D96FF] drop-shadow-md pb-2 hover:scale-105 transition-transform duration-300">
               {APP_NAME}
             </h1>
             {childName && (
-              <p className="font-fredoka text-lg text-pink-400">Hi {childName}! 👋</p>
+              <p className="font-fredoka text-lg text-pink-500 mt-1">Hi {childName}! 👋</p>
             )}
           </div>
           <button
             type="button"
             onClick={toggleMute}
-            className={`music-btn mt-1 ${!muted ? 'music-btn--playing' : ''} card-glass flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full text-2xl shadow-md transition-all hover:scale-110 active:scale-90`}
+            className={`music-btn ${!muted ? 'music-btn--playing' : ''} card-glass flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full text-2xl shadow-lg transition-all hover:scale-110 active:scale-90 border-4 border-white/60 bg-white/40`}
             aria-label={muted ? 'Turn music on' : 'Turn music off'}
           >
             {muted ? '🔇' : '🎵'}
@@ -215,7 +189,7 @@ export default function HomePage() {
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
                 <div
-                  className="h-full rounded-full"
+                  className="animate-shine h-full rounded-full"
                   style={{
                     width: `${Math.max(3, Math.round((collected / TOTAL_STICKERS) * 100))}%`,
                     background: 'linear-gradient(90deg, #FECA57, #FF9F43)',
@@ -234,22 +208,27 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* ✨ Giant Magical Glow Bloom behind the cards */}
+        <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-tr from-pink-300/30 via-yellow-200/30 to-purple-300/30 blur-[80px] rounded-full pointer-events-none mix-blend-screen animate-pulse" style={{ animationDuration: '6s' }} />
+
         {/* Dashboard Grid — 2 cols mobile, 4 cols tablet/desktop */}
-        <nav className="grid w-full max-w-sm grid-cols-2 gap-4 mb-6 sm:max-w-xl sm:grid-cols-4 sm:gap-5 lg:max-w-3xl lg:gap-6" aria-label="Main navigation">
+        <nav className="relative z-10 grid w-full max-w-sm grid-cols-2 gap-4 mb-8 sm:max-w-2xl sm:grid-cols-4 sm:gap-6 lg:max-w-4xl lg:gap-8 animate-hero-fade-in" aria-label="Main navigation">
           {cards.map((card, i) => {
             const isName = card.action === 'name'
-            const cls = 'dash-card card-stagger'
+            const cls = 'dash-card card-stagger shadow-[0_12px_0_rgba(0,0,0,0.15)]'
+            // Add tiny organic random rotations so it looks like scattered toy blocks
+            const organicRotations = ['rotate-[-2deg]', 'rotate-[1deg]', 'rotate-[2deg]', 'rotate-[-1deg]', 'rotate-[3deg]', 'rotate-[-3deg]', 'rotate-[1deg]', 'rotate-[-2deg]']
             const sty = {
               '--card-bg': card.bg,
               '--card-shadow': card.shadow,
-              animationDelay: `${0.1 + i * 0.06}s`,
+              animationDelay: `${0.4 + i * 0.1}s`,
             } as React.CSSProperties
             const lbl = `${card.label} — press ${i + 1}`
             const inner = (
-              <>
-                <div className="dash-card-icon" aria-hidden="true">{card.emoji}</div>
+              <div className={organicRotations[i % organicRotations.length] + " transition-transform duration-300"}>
+                <div className="dash-card-icon mx-auto mb-2" aria-hidden="true">{card.emoji}</div>
                 <span className="dash-label font-fredoka">{card.label}</span>
-              </>
+              </div>
             )
 
             return isName ? (

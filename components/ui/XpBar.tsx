@@ -25,7 +25,7 @@ export default function XpBar() {
       </div>
       <div className="h-3 overflow-hidden rounded-full bg-white/70 shadow-inner">
         <div
-          className={`xp-bar-fill h-full rounded-full bg-gradient-to-r from-brand-yellow to-brand-orange ${juice ? 'xp-bar-fill--juice' : ''}`}
+          className={`xp-bar-fill animate-shine h-full rounded-full bg-gradient-to-r from-brand-yellow to-brand-orange ${juice ? 'xp-bar-fill--juice' : ''}`}
           style={{ width: `${progress.percent}%` }}
         />
       </div>

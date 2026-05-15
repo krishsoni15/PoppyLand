@@ -41,6 +41,16 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
       speechTimer.current = setTimeout(() => setSpeechText(null), 2000)
     }
     window.addEventListener('speech-end', onEnd)
+
+    // Initial Greeting on load
+    setTimeout(() => {
+      const greeting = "Hey I am Poppy! Welcome! Let's start learning!"
+      setSpeechText(greeting)
+      speakText(greeting)
+      if (speechTimer.current) clearTimeout(speechTimer.current)
+      speechTimer.current = setTimeout(() => setSpeechText(null), 4000)
+    }, 1000)
+
     return () => {
       window.removeEventListener('speech-end', onEnd)
       if (speechTimer.current) clearTimeout(speechTimer.current)
@@ -52,7 +62,7 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
     <div
       className="fixed bottom-3 right-4 z-50 flex flex-col items-end"
       style={{
-        width: 170,
+        width: 240,
         animation: 'poppyIdle 3s ease-in-out infinite',
       }}
     >
@@ -77,17 +87,17 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
         onClick={handleClick}
         className="relative border-none bg-transparent p-0 origin-bottom"
         style={{
-          width: 170,
-          height: 170,
+          width: 240,
+          height: 240,
           transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',
         }}
-        onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.12)')}
+        onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.08)')}
         onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-        onMouseDown={e  => (e.currentTarget.style.transform = 'scale(0.93)')}
-        onMouseUp={e    => (e.currentTarget.style.transform = 'scale(1.08)')}
+        onMouseDown={e  => (e.currentTarget.style.transform = 'scale(0.95)')}
+        onMouseUp={e    => (e.currentTarget.style.transform = 'scale(1.05)')}
         aria-label="Poppy the mascot — click for a tip!"
       >
-        <Poppy state={poppyState} size={170} isSpeaking={isSpeaking} />
+        <Poppy state={speechText ? 'idle' : poppyState} size={240} isSpeaking={isSpeaking} />
       </button>
     </div>
   )
