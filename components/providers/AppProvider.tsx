@@ -41,6 +41,8 @@ interface AppContextValue {
   toast: (message: string) => void
   streak: StreakState
   setStreak: (s: StreakState) => void
+  isNightMode: boolean
+  toggleNightMode: () => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -55,6 +57,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [toastMsg, setToastMsg] = useState<string | null>(null)
   const [levelUp, setLevelUp] = useState<LevelInfo | null>(null)
   const [streak, setStreakState] = useState<StreakState>({ current: 0, best: 0 })
+  const [isNightMode, setIsNightMode] = useState(false)
   const poppyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hydrated = useRef(false)
 
@@ -71,6 +74,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (wasAway) {
       setTimeout(() => setToastMsg('Welcome back! 🎉'), 600)
     }
+    const savedNightMode = localStorage.getItem('poppyland_nightmode')
+    if (savedNightMode === 'true') setIsNightMode(true)
+    
     hydrated.current = true
   }, [])
 
@@ -148,6 +154,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     saveStreak(s)
   }, [])
 
+  const toggleNightMode = useCallback(() => {
+    setIsNightMode(prev => {
+      const next = !prev
+      localStorage.setItem('poppyland_nightmode', String(next))
+      return next
+    })
+  }, [])
+
   const value = useMemo<AppContextValue>(
     () => ({
       xp,
@@ -165,6 +179,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast,
       streak,
       setStreak,
+      isNightMode,
+      toggleNightMode,
     }),
     [
       xp,
@@ -182,6 +198,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toast,
       streak,
       setStreak,
+      isNightMode,
+      toggleNightMode,
     ],
   )
 

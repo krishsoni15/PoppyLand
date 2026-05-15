@@ -1,14 +1,37 @@
 'use client'
 
+import { useApp } from '@/components/providers/AppProvider'
+
 export default function AnimatedBackground() {
+  const { isNightMode, toggleNightMode } = useApp()
+
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
+    <div className={`fixed inset-0 z-0 overflow-hidden pointer-events-none transition-colors duration-1000 ${isNightMode ? 'bg-[#0f172a]' : 'bg-[#BAE6FD]'}`} aria-hidden="true">
       {/* Soft gradient sky */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#60A5FA] via-[#BAE6FD] to-[#FEF08A] opacity-80" />
+      <div className={`absolute inset-0 transition-opacity duration-1000 ${isNightMode ? 'opacity-0' : 'opacity-80 bg-gradient-to-b from-[#60A5FA] via-[#BAE6FD] to-[#FEF08A]'}`} />
+      
+      {/* Night Sky Gradient & Stars */}
+      <div className={`absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#1e1b4b] to-[#312e81] transition-opacity duration-1000 ${isNightMode ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Stars */}
+        {[...Array(40)].map((_, i) => (
+          <div 
+            key={`star-${i}`} 
+            className="absolute rounded-full bg-white animate-pulse"
+            style={{
+              top: `${Math.random() * 60}%`,
+              left: `${Math.random() * 100}%`,
+              width: `${Math.random() * 3 + 1}px`,
+              height: `${Math.random() * 3 + 1}px`,
+              animationDelay: `${Math.random() * 2}s`,
+              opacity: Math.random() * 0.5 + 0.3
+            }}
+          />
+        ))}
+      </div>
 
 
       {/* 🌈 Giant Dreamy Rainbow (diagonal, blurred, behind cards) */}
-      <div className="absolute top-[-10%] left-[-10%] w-[120%] h-[120%] opacity-40 blur-[20px] mix-blend-multiply transform -rotate-12 animate-pulse" style={{ animationDuration: '4s' }}>
+      <div className={`absolute top-[-10%] left-[-10%] w-[120%] h-[120%] blur-[20px] mix-blend-multiply transform -rotate-12 animate-pulse transition-opacity duration-1000 ${isNightMode ? 'opacity-0' : 'opacity-40'}`} style={{ animationDuration: '4s' }}>
         <svg viewBox="0 0 1000 500" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M 100 500 A 400 400 0 0 1 900 500" stroke="#EF4444" strokeWidth="40" strokeLinecap="round" />
           <path d="M 140 500 A 360 360 0 0 1 860 500" stroke="#F97316" strokeWidth="40" strokeLinecap="round" />
@@ -20,7 +43,12 @@ export default function AnimatedBackground() {
       </div>
 
       {/* ☀️ Smiling Glowing Sun */}
-      <div className="absolute top-[8%] left-[8%] w-[160px] h-[160px] opacity-90 animate-sun-wobble">
+      <div 
+        onClick={toggleNightMode}
+        className={`absolute top-[8%] left-[8%] w-[160px] h-[160px] animate-sun-wobble transition-all duration-1000 pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${isNightMode ? 'translate-y-[100px] opacity-0 pointer-events-none' : 'translate-y-0 opacity-90'}`}
+        role="button"
+        aria-label="Switch to Night Mode"
+      >
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_25px_rgba(251,191,36,0.8)]" fill="#FBBF24" xmlns="http://www.w3.org/2000/svg">
           {/* Sun body */}
           <circle cx="50" cy="50" r="28" fill="#F59E0B" />
@@ -43,6 +71,24 @@ export default function AnimatedBackground() {
           <path d="M82 82 L74 77 L79 72 Z" />
           <path d="M18 82 L26 77 L21 72 Z" />
           <path d="M82 18 L74 23 L79 28 Z" />
+        </svg>
+      </div>
+
+      {/* 🌙 Sleepy Moon */}
+      <div 
+        onClick={toggleNightMode}
+        className={`absolute top-[8%] right-[15%] w-[140px] h-[140px] animate-sun-wobble transition-all duration-1000 pointer-events-auto cursor-pointer hover:scale-110 active:scale-95 ${isNightMode ? 'translate-y-0 opacity-90' : 'translate-y-[100px] opacity-0 pointer-events-none'}`}
+        role="button"
+        aria-label="Switch to Day Mode"
+      >
+        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_30px_rgba(255,255,255,0.6)]" fill="#FDE047" xmlns="http://www.w3.org/2000/svg">
+          <path d="M50 10 A 40 40 0 1 0 90 50 A 30 30 0 1 1 50 10 Z" fill="#FEF08A" />
+          {/* Sleepy Face */}
+          <path d="M35 45 Q 40 40 45 45" stroke="#713F12" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <path d="M55 45 Q 60 40 65 45" stroke="#713F12" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+          <path d="M45 58 Q 50 63 55 58" stroke="#713F12" strokeWidth="2" strokeLinecap="round" fill="none" />
+          <text x="70" y="30" fontSize="12" fill="#FEF08A" className="animate-pulse">Z</text>
+          <text x="85" y="15" fontSize="16" fill="#FEF08A" className="animate-pulse" style={{ animationDelay: '0.5s' }}>z</text>
         </svg>
       </div>
 
@@ -96,7 +142,7 @@ export default function AnimatedBackground() {
       </div>
 
       {/* ⛰️ Soft rolling hills (Back) */}
-      <div className="absolute bottom-0 left-0 right-0 h-[28vh] w-full" style={{ filter: 'drop-shadow(0px -4px 12px rgba(34, 197, 94, 0.2))' }}>
+      <div className={`absolute bottom-0 left-0 right-0 h-[28vh] w-full transition-all duration-1000 ${isNightMode ? 'brightness-50' : 'brightness-100'}`} style={{ filter: 'drop-shadow(0px -4px 12px rgba(34, 197, 94, 0.2))' }}>
         <svg viewBox="0 0 1000 200" className="w-full h-full" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 100 Q 250 -20 500 100 T 1000 100 V200 H0 Z" fill="#86EFAC" />
 
@@ -130,7 +176,7 @@ export default function AnimatedBackground() {
       </div>
 
       {/* ⛰️ Soft rolling hills (Front) */}
-      <div className="absolute bottom-0 left-0 right-0 h-[20vh] w-full" style={{ filter: 'drop-shadow(0px -8px 16px rgba(21, 128, 61, 0.25))' }}>
+      <div className={`absolute bottom-0 left-0 right-0 h-[20vh] w-full transition-all duration-1000 ${isNightMode ? 'brightness-[0.4] hue-rotate-15' : 'brightness-100'}`} style={{ filter: 'drop-shadow(0px -8px 16px rgba(21, 128, 61, 0.25))' }}>
         <svg viewBox="0 0 1000 200" className="w-full h-full" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 150 Q 250 20 500 150 T 1000 150 V200 H0 Z" fill="#4ADE80" />
 

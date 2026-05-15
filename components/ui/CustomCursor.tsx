@@ -18,10 +18,10 @@ export default function CustomCursor() {
     let currentX = -100
     let currentY = -100
 
-    // Smooth follow animation
+    // Smooth follow animation - almost instantaneous so glitter spawns correctly behind it
     const animate = () => {
-      currentX += (targetX - currentX) * 0.18
-      currentY += (targetY - currentY) * 0.18
+      currentX += (targetX - currentX) * 0.95
+      currentY += (targetY - currentY) * 0.95
       setPosition({ x: currentX, y: currentY })
       rafRef.current = requestAnimationFrame(animate)
     }

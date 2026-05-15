@@ -17,6 +17,7 @@ import AnimatedBackground from '@/components/home/AnimatedBackground'
 
 /* ── Dashboard cards ── */
 const cards = [
+  /* 
   {
     href: '/speak',
     label: 'Speak & Repeat',
@@ -25,6 +26,7 @@ const cards = [
     shadow: '#C94A4A',
     speak: "Let's play speak and repeat!",
   },
+  */
   {
     href: '/alphabet',
     label: 'ABC Forest',
@@ -95,16 +97,29 @@ const cards = [
 
 export default function HomePage() {
   const router = useRouter()
-  const { collection, childName, setChildName, setPoppy } = useApp()
-  const { muted, toggleMute } = useSound()
+  const { collection, childName, setChildName, setPoppy, isNightMode, toggleNightMode } = useApp()
+  const { muted, toggleMute, setMood } = useSound()
   const { speak } = useSpeech()
+
+  // Update music mood based on night mode
+  useEffect(() => {
+    if (isNightMode) {
+      setMood('dreamy')
+    } else {
+      setMood('default')
+    }
+  }, [isNightMode, setMood])
   const [nameOpen, setNameOpen] = useState(false)
   const [lastTapped, setLastTapped] = useState<string | null>(null)
   const collected = getCollectionCount(collection)
 
   useEffect(() => {
-    setPoppy(childName ? 'idle' : 'sleeping')
-  }, [setPoppy, childName])
+    if (isNightMode) {
+      setPoppy('sleeping')
+    } else {
+      setPoppy(childName ? 'idle' : 'sleeping')
+    }
+  }, [setPoppy, childName, isNightMode])
 
   useEffect(() => {
     if (!lastTapped) return
@@ -164,7 +179,13 @@ export default function HomePage() {
             <p className="font-nunito text-[12px] font-bold uppercase tracking-widest text-purple-600 mb-1 opacity-90">
               ✨ Welcome to
             </p>
-            <h1 className="font-fredoka text-5xl sm:text-6xl lg:text-7xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B6B] via-[#A855F7] to-[#4D96FF] drop-shadow-md pb-2 hover:scale-105 transition-transform duration-300">
+            <h1 
+              className="font-fredoka text-5xl sm:text-6xl lg:text-7xl font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B6B] via-[#FECA57] to-[#4D96FF] drop-shadow-md pb-2 hover:scale-105 transition-transform duration-300"
+              style={{
+                backgroundSize: '200% auto',
+                animation: 'gradient-x 4s ease infinite, pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+              }}
+            >
               {APP_NAME}
             </h1>
             {childName && (
@@ -174,7 +195,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={toggleMute}
-            className={`music-btn ${!muted ? 'music-btn--playing' : ''} card-glass flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full text-2xl shadow-lg transition-all hover:scale-110 active:scale-90 border-4 border-white/60 bg-white/40`}
+            className={`music-btn ${!muted ? 'music-btn--playing' : ''} card-glass flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full text-2xl shadow-lg transition-all hover:scale-110 active:scale-90 border-4 ${isNightMode ? 'border-indigo-400 bg-indigo-900/60' : 'border-white/60 bg-white/40'}`}
             aria-label={muted ? 'Turn music on' : 'Turn music off'}
           >
             {muted ? '🔇' : '🎵'}
@@ -186,14 +207,14 @@ export default function HomePage() {
           <XpBar />
           <Link
             href="/collection"
-            className="card-glass flex items-center gap-3 rounded-2xl px-4 py-2.5 transition-all hover:scale-[1.02] hover:shadow-md"
+            className={`card-glass flex items-center gap-3 rounded-2xl px-4 py-2.5 transition-all hover:scale-[1.02] hover:shadow-md ${isNightMode ? 'bg-indigo-900/40 border-indigo-400/50' : ''}`}
             aria-label={`${collected} of ${TOTAL_STICKERS} stickers`}
           >
             <span className="text-xl">⭐</span>
             <div className="flex flex-1 flex-col gap-1">
               <div className="flex items-center justify-between">
-                <span className="font-fredoka text-sm text-gray-600">Sticker Collection</span>
-                <span className="font-fredoka text-sm font-bold text-purple-500">{collected}/{TOTAL_STICKERS}</span>
+                <span className={`font-fredoka text-sm ${isNightMode ? 'text-indigo-200' : 'text-gray-600'}`}>Sticker Collection</span>
+                <span className={`font-fredoka text-sm font-bold ${isNightMode ? 'text-yellow-300' : 'text-purple-500'}`}>{collected}/{TOTAL_STICKERS}</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
                 <div
@@ -219,11 +240,12 @@ export default function HomePage() {
         {/* ✨ Giant Magical Glow Bloom behind the cards */}
         <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-tr from-pink-300/30 via-yellow-200/30 to-purple-300/30 blur-[80px] rounded-full pointer-events-none mix-blend-screen animate-pulse" style={{ animationDuration: '6s' }} />
 
-        {/* Dashboard Grid — 2 cols mobile, 3 cols tablet/desktop for a perfect 3x3 grid */}
-        <nav className="relative z-10 grid w-full max-w-sm grid-cols-2 gap-4 mb-8 sm:max-w-2xl sm:grid-cols-3 sm:gap-6 lg:max-w-4xl lg:gap-8 animate-hero-fade-in" aria-label="Main navigation">
+        {/* Dashboard Grid — 2 cols mobile, 4 cols tablet/desktop */}
+        <nav className="relative z-10 grid w-full max-w-sm grid-cols-2 gap-4 mb-8 sm:max-w-2xl sm:grid-cols-4 sm:gap-6 lg:max-w-4xl lg:gap-8 animate-hero-fade-in" aria-label="Main navigation">
           {cards.map((card, i) => {
             const isName = card.action === 'name'
-            const cls = 'dash-card card-stagger shadow-[0_12px_0_rgba(0,0,0,0.15)]'
+            const nightCls = isNightMode ? 'brightness-75 hover:brightness-100 saturate-150 border-indigo-300/30' : ''
+            const cls = `dash-card card-stagger shadow-[0_12px_0_rgba(0,0,0,0.15)] ${nightCls}`
             // Add tiny organic random rotations so it looks like scattered toy blocks
             const organicRotations = ['rotate-[-2deg]', 'rotate-[1deg]', 'rotate-[2deg]', 'rotate-[-1deg]', 'rotate-[3deg]', 'rotate-[-3deg]', 'rotate-[1deg]', 'rotate-[-2deg]']
             const sty = {

@@ -36,6 +36,7 @@ export default function CursorTrail() {
       const dy = mouse.y - lastMouse.y
       const dist = Math.sqrt(dx * dx + dy * dy)
       
+      // Reverted to previous smoother spawn logic
       const spawnCount = Math.min(Math.floor(dist / 4) + 1, 8)
       
       for (let i = 0; i < spawnCount; i++) {
@@ -79,8 +80,8 @@ export default function CursorTrail() {
         const p = particles[i]
         p.x += p.vx
         p.y += p.vy
-        p.life -= 0.03
-        p.size *= 0.96
+        p.life -= 0.03  // Slower, smoother fade
+        p.size *= 0.96  // Slower shrinking for a continuous tail
 
         if (p.life <= 0) {
           particles.splice(i, 1)
