@@ -60,7 +60,7 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
   return (
     /* Float the whole container with CSS animation */
     <div
-      className="fixed bottom-3 right-4 z-50 flex flex-col items-end"
+      className="global-mascot-wrapper fixed bottom-3 right-4 z-50 flex flex-col items-end"
       style={{
         width: 240,
         animation: 'poppyIdle 3s ease-in-out infinite',

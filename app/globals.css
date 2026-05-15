@@ -634,6 +634,10 @@ body {
   animation: musicBounce 1.5s ease-in-out infinite;
 }
 
+.hide-global-mascot .global-mascot-wrapper {
+  display: none !important;
+}
+
 .music-btn--playing::before {
   content: '♪';
   position: absolute;

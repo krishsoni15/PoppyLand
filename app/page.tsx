@@ -18,6 +18,14 @@ import AnimatedBackground from '@/components/home/AnimatedBackground'
 /* ── Dashboard cards ── */
 const cards = [
   {
+    href: '/speak',
+    label: 'Speak & Repeat',
+    emoji: '🎙️',
+    bg: '#FF6B6B',
+    shadow: '#C94A4A',
+    speak: "Let's play speak and repeat!",
+  },
+  {
     href: '/alphabet',
     label: 'ABC Forest',
     emoji: '🔤',
@@ -211,8 +219,8 @@ export default function HomePage() {
         {/* ✨ Giant Magical Glow Bloom behind the cards */}
         <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-tr from-pink-300/30 via-yellow-200/30 to-purple-300/30 blur-[80px] rounded-full pointer-events-none mix-blend-screen animate-pulse" style={{ animationDuration: '6s' }} />
 
-        {/* Dashboard Grid — 2 cols mobile, 4 cols tablet/desktop */}
-        <nav className="relative z-10 grid w-full max-w-sm grid-cols-2 gap-4 mb-8 sm:max-w-2xl sm:grid-cols-4 sm:gap-6 lg:max-w-4xl lg:gap-8 animate-hero-fade-in" aria-label="Main navigation">
+        {/* Dashboard Grid — 2 cols mobile, 3 cols tablet/desktop for a perfect 3x3 grid */}
+        <nav className="relative z-10 grid w-full max-w-sm grid-cols-2 gap-4 mb-8 sm:max-w-2xl sm:grid-cols-3 sm:gap-6 lg:max-w-4xl lg:gap-8 animate-hero-fade-in" aria-label="Main navigation">
           {cards.map((card, i) => {
             const isName = card.action === 'name'
             const cls = 'dash-card card-stagger shadow-[0_12px_0_rgba(0,0,0,0.15)]'
