@@ -25,6 +25,7 @@ interface GlobalMascotProps {
 export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
   const { isSpeaking } = useSpeech()
   const [speechText, setSpeechText] = useState<string | null>(null)
+  const [worldMode, setWorldMode] = useState('summer')
   const speechTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleClick = useCallback(() => {
@@ -36,11 +37,19 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
   }, [])
 
   useEffect(() => {
+    const onMode = (e: Event) => {
+      const next = (e as CustomEvent<string>).detail
+      if (next) setWorldMode(next)
+    }
+    const initial = document.body.dataset.worldMode
+    if (initial) setWorldMode(initial)
+
     const onEnd = () => {
       if (speechTimer.current) clearTimeout(speechTimer.current)
       speechTimer.current = setTimeout(() => setSpeechText(null), 2000)
     }
     window.addEventListener('speech-end', onEnd)
+    window.addEventListener('world-mode-change', onMode as EventListener)
 
     // Initial Greeting on load
     setTimeout(() => {
@@ -53,6 +62,7 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
 
     return () => {
       window.removeEventListener('speech-end', onEnd)
+      window.removeEventListener('world-mode-change', onMode as EventListener)
       if (speechTimer.current) clearTimeout(speechTimer.current)
     }
   }, [])
@@ -77,7 +87,7 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
             lineHeight: '1.4',
           }}
         >
-          {speechText}
+          {speechText} {worldMode === 'monsoon' ? '☔' : worldMode === 'night' ? '🌙' : worldMode === 'summer' ? '😎' : ''}
         </div>
       )}
 
@@ -97,7 +107,11 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
         onMouseUp={e    => (e.currentTarget.style.transform = 'scale(1.05)')}
         aria-label="Poppy the mascot — click for a tip!"
       >
-        <Poppy state={speechText ? 'idle' : poppyState} size={140} isSpeaking={isSpeaking} />
+        <div className="relative">
+          {worldMode === 'monsoon' && <div className="absolute -top-4 left-8 text-2xl">☔</div>}
+          {worldMode === 'summer' && <div className="absolute -top-3 left-9 text-2xl">🕶️</div>}
+          <Poppy state={speechText ? 'idle' : poppyState} size={140} isSpeaking={isSpeaking} />
+        </div>
       </button>
     </div>
   )

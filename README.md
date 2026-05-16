@@ -8,6 +8,21 @@ Built with modern web technologies, PoppyLand focuses heavily on **visual aesthe
 
 ---
 
+## ⚡ 2-Command Quick Start (See it visually fast)
+
+From the project root, run just these two commands:
+
+```bash
+npm install
+npm run dev
+```
+
+Then open: **http://localhost:3000**
+
+> Tip: this launches the magical homepage directly so you can immediately see the seasonal world + mascot reactions.
+
+---
+
 ## ✨ Full Feature List & Properties
 
 ### 🎮 Learning Modules (Pages & Screens)
