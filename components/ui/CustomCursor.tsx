@@ -18,7 +18,6 @@ export default function CustomCursor() {
     let currentX = -100
     let currentY = -100
 
-    // Smooth follow animation - almost instantaneous so glitter spawns correctly behind it
     const animate = () => {
       currentX += (targetX - currentX) * 0.95
       currentY += (targetY - currentY) * 0.95
@@ -72,6 +71,8 @@ export default function CustomCursor() {
       <style dangerouslySetInnerHTML={{ __html: `
         * { cursor: none !important; }
       ` }} />
+
+      {/* Actual Cursor */}
       <div
         className="pointer-events-none fixed z-[9999]"
         style={{
@@ -82,38 +83,37 @@ export default function CustomCursor() {
         aria-hidden="true"
       >
         {isPointer ? (
-          /* Hand pointer cursor */
+          /* Hand pointer cursor (BIGGER and Magic) */
           <svg
-            width={clicked ? 26 : 28}
-            height={clicked ? 26 : 28}
+            width={clicked ? 38 : 46}
+            height={clicked ? 38 : 46}
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              filter: 'drop-shadow(0 2px 6px rgba(168,85,247,0.55))',
+              filter: 'drop-shadow(0 4px 10px rgba(168,85,247,0.7))',
               transition: 'width 0.1s, height 0.1s',
             }}
           >
-            {/* Palm */}
             <path
               d="M9 12V6a1.5 1.5 0 0 1 3 0v4.5M12 10.5V5a1.5 1.5 0 0 1 3 0v5.5M15 10V7a1.5 1.5 0 0 1 3 0v6c0 3.866-2.686 7-6 7-3.314 0-6-3.134-6-7v-2l1.293-1.293A1 1 0 0 1 9 9.414V12"
               stroke="#A855F7"
-              strokeWidth="1.6"
+              strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
-              fill="white"
+              fill="#FECA57"
             />
           </svg>
         ) : (
-          /* Arrow cursor */
+          /* Arrow cursor (BIGGER) */
           <svg
-            width={clicked ? 20 : 24}
-            height={clicked ? 20 : 24}
+            width={clicked ? 32 : 38}
+            height={clicked ? 32 : 38}
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             style={{
-              filter: 'drop-shadow(0 2px 6px rgba(255,107,107,0.55))',
+              filter: 'drop-shadow(0 4px 10px rgba(255,107,107,0.7))',
               transition: 'width 0.1s, height 0.1s',
               transform: clicked ? 'scale(0.9)' : 'scale(1)',
             }}
@@ -122,7 +122,7 @@ export default function CustomCursor() {
               d="M4 2L4 18L8.5 13.5L11.5 20L13.5 19L10.5 12.5L17 12.5L4 2Z"
               fill="#FF6B6B"
               stroke="white"
-              strokeWidth="1.5"
+              strokeWidth="1.8"
               strokeLinejoin="round"
             />
           </svg>
