@@ -1205,18 +1205,17 @@ body {
 /* ───── Game: Shimmer target letter ───── */
 
 .shimmer-target {
-  background: linear-gradient(90deg,
-      var(--color-red),
-      var(--color-yellow),
-      var(--color-green),
-      var(--color-blue),
-      var(--color-purple),
-      var(--color-red));
-  background-size: 300% 100%;
+  background: linear-gradient(135deg,
+      #a855f7 0%,
+      #ff6bb5 40%,
+      #feca57 80%,
+      #a855f7 100%);
+  background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmerTarget 3s linear infinite;
+  animation: shimmerTarget 4.5s linear infinite;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
 }
 
 /* ───── Game: Star pop (score display) ───── */
@@ -1402,4 +1401,44 @@ body {
   .dash-card .dash-label {
     font-size: 24px;
   }
+}
+
+/* ───── Keyboard Keypress Pop Overlay ───── */
+@keyframes keyPop {
+  0% {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.8) translateY(-40px);
+    opacity: 0;
+  }
+}
+
+.key-pop-overlay {
+  animation: keyPop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ───── Cursor Magic Star Trail ───── */
+@keyframes starFade {
+  0% {
+    transform: translate(-50%, -50%) scale(1) translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0) translateY(40px) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+.animate-star-fade {
+  animation: starFade 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
 }

@@ -43,6 +43,26 @@ export default function GameScreen() {
   const [streakMilestone, setStreakMilestone] = useState<ReturnType<typeof getStreakMilestone>>(null)
   const [answers, setAnswers] = useState<{ correct: boolean }[]>([])
 
+  const typedBufferRef = useRef<string>('')
+  const typedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [pressedKeyFeedback, setPressedKeyFeedback] = useState<string | null>(null)
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const showKeyFeedback = useCallback((char: string) => {
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current)
+    setPressedKeyFeedback(char)
+    feedbackTimerRef.current = setTimeout(() => {
+      setPressedKeyFeedback(null)
+    }, 750)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current)
+    }
+  }, [])
+
   useEffect(() => {
     setPoppy('idle')
     sound.setMood('energetic')
@@ -77,6 +97,16 @@ export default function GameScreen() {
       return () => clearTimeout(t)
     }
   }, [state.currentQuestion, state.mode, state.phase, promptQuestion])
+
+  useEffect(() => {
+    if (state.phase !== 'playing') {
+      typedBufferRef.current = ''
+      if (typedTimeoutRef.current) {
+        clearTimeout(typedTimeoutRef.current)
+        typedTimeoutRef.current = null
+      }
+    }
+  }, [state.phase])
 
   useEffect(() => {
     const phaseKey = `${state.questionIndex}-${state.phase}`
@@ -131,7 +161,17 @@ export default function GameScreen() {
         ? `Yes! ${state.currentQuestion.letter} is correct! ${state.currentQuestion.letter} is for ${state.currentQuestion.word}!`
         : `Yes! ${state.currentQuestion.number} is correct!`
 
-      speak(`${randomPraise} ${contextMsg}`, () => setTimeout(next, 1000))
+      // Safety fallback timer of 5.5 seconds: if speech synthesizer callback fails to fire or gets blocked, go to next level anyway!
+      const safetyTimer = setTimeout(() => {
+        next()
+      }, 5500)
+
+      speak(`${randomPraise} ${contextMsg}`, () => {
+        clearTimeout(safetyTimer)
+        setTimeout(next, 1000)
+      })
+
+      return () => clearTimeout(safetyTimer)
     } else if (state.phase === 'answered-wrong') {
       handledPhaseRef.current = phaseKey
       setAnswers(prev => [...prev, { correct: false }])
@@ -144,9 +184,22 @@ export default function GameScreen() {
         ? `Oops, that's not ${state.currentQuestion.letter}. Try again!`
         : `Oops, that's not ${state.currentQuestion.number}. Try again!`
 
+      // Safety fallback timer of 4.5 seconds in case speech synthesis is blocked
+      const safetyTimer = setTimeout(() => {
+        retry()
+      }, 4500)
+
       speak(wrongMsg)
-      const t = setTimeout(retry, 1200)
-      return () => clearTimeout(t)
+
+      const t = setTimeout(() => {
+        clearTimeout(safetyTimer)
+        retry()
+      }, 1200)
+
+      return () => {
+        clearTimeout(safetyTimer)
+        clearTimeout(t)
+      }
     }
   }, [
     state.phase,
@@ -210,23 +263,64 @@ export default function GameScreen() {
       (event) => {
         if (state.phase !== 'playing') return
         const key = event.key
-        if (key >= '1' && key <= '4') {
+
+        // Keyboard hotkeys 1-4 only allowed in letters mode to prevent conflict in numbers mode!
+        if (state.mode === 'letters' && key >= '1' && key <= '4') {
           event.preventDefault()
-          pickChoiceByIndex(parseInt(key, 10) - 1)
+          const index = parseInt(key, 10) - 1
+          pickChoiceByIndex(index)
+          const choice = state.choices[index]
+          if (choice) showKeyFeedback(choice.letter)
           return
         }
+
         if (state.mode === 'letters') {
           const letter = key.length === 1 ? key.toUpperCase() : ''
           if (/^[A-Z]$/.test(letter)) {
             event.preventDefault()
             pickLetterFromKeyboard(letter)
+            showKeyFeedback(letter)
           }
         } else if (/^[0-9]$/.test(key)) {
           event.preventDefault()
-          pickNumberFromKeyboard(key === '0' ? 10 : parseInt(key, 10))
+          showKeyFeedback(key)
+
+          // Clear any pending timeout
+          if (typedTimeoutRef.current) {
+            clearTimeout(typedTimeoutRef.current)
+            typedTimeoutRef.current = null
+          }
+
+          // Append to typing buffer
+          typedBufferRef.current += key
+          const currentInput = parseInt(typedBufferRef.current, 10)
+
+          // Find matches in choices
+          const exactMatches = state.choices.filter(c => c.number === currentInput)
+          const prefixMatches = state.choices.filter(c => String(c.number).startsWith(typedBufferRef.current))
+
+          if (exactMatches.length > 0 && prefixMatches.length === 1) {
+            // Exactly one matched option exists (e.g. they typed "11" for 11, or "2" for 2 and no "20" exists in choices)
+            answerNumber(exactMatches[0].number)
+            typedBufferRef.current = ''
+          } else if (prefixMatches.length > 0) {
+            // Multiple options could match (e.g. typed "1", and choices are both "1" and "11" or "12")
+            // Wait to see if they press another key to make it double digit
+            typedTimeoutRef.current = setTimeout(() => {
+              const finalInput = parseInt(typedBufferRef.current, 10)
+              const match = state.choices.find(c => c.number === finalInput)
+              if (match) {
+                answerNumber(match.number)
+              }
+              typedBufferRef.current = ''
+            }, 600)
+          } else {
+            // No matches at all, reset buffer
+            typedBufferRef.current = ''
+          }
         }
       },
-      [state.phase, state.mode, pickChoiceByIndex, pickLetterFromKeyboard, pickNumberFromKeyboard],
+      [state.phase, state.mode, state.choices, pickChoiceByIndex, pickLetterFromKeyboard, answerNumber, showKeyFeedback],
     ),
     state.phase === 'playing',
   )
@@ -255,7 +349,7 @@ export default function GameScreen() {
     <PageShell variant="play">
       <NavBar title="Play Game 🎮" />
 
-      <main className="mx-auto flex max-w-2xl flex-col gap-4 px-4 pb-36 pt-2">
+      <main className="mx-auto flex max-w-2xl flex-col gap-4 px-4 pb-8 pt-2 w-full">
         {state.streak.current > 0 && (
           <p className="text-center font-fredoka text-lg text-brand-orange">
             🔥 Streak: {state.streak.current}
@@ -314,6 +408,8 @@ export default function GameScreen() {
           prompt={prompt}
           target={target}
           mode={state.mode}
+          word={state.currentQuestion.word}
+          emoji={state.currentQuestion.emoji}
           questionIndex={state.questionIndex}
           totalQuestions={state.totalQuestions}
         />
@@ -342,10 +438,19 @@ export default function GameScreen() {
           hints={
             state.mode === 'letters'
               ? ['A–Z or 1–4', 'Letter keys']
-              : ['0–9 or 1–4', 'Number keys']
+              : ['0–9 keys', 'Type the numbers']
           }
         />
       </main>
+
+      {/* Giant high-graphic keypress popup overlay for massive visual feedback and preschool dopamine! */}
+      {pressedKeyFeedback && (
+        <div className="pointer-events-none fixed inset-0 z-[100] flex items-center justify-center select-none overflow-hidden">
+          <div className="key-pop-overlay flex h-48 w-48 items-center justify-center rounded-full bg-gradient-to-tr from-brand-purple to-brand-pink text-8xl font-fredoka text-white shadow-[0_16px_48px_rgba(168,85,247,0.5)] border-4 border-white/90 backdrop-blur-sm">
+            {pressedKeyFeedback}
+          </div>
+        </div>
+      )}
     </PageShell>
   )
 }

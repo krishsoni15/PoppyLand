@@ -27,10 +27,29 @@ export default function GameResult({ score, total, onPlayAgain, answers }: GameR
 
   return (
     <div className="flex flex-col items-center justify-center gap-6 px-6 py-12 text-center">
-      {/* Trophy or Emoji */}
-      <div className="emoji-bounce text-8xl sm:text-9xl" aria-hidden="true">
-        {pct >= 80 ? '🏆' : pct >= 50 ? '🌟' : '💪'}
-      </div>
+      {/* Trophy or Emoji Showcase */}
+      {pct >= 80 ? (
+        <div className="relative flex items-center justify-center h-48 w-48 mb-2">
+          {/* Rotating Ray Background */}
+          <div className="absolute inset-[-20px] rounded-full bg-gradient-to-tr from-yellow-300 via-amber-400 to-orange-500 opacity-25 blur-2xl animate-pulse" />
+          <div className="absolute inset-[-10px] rounded-full border-4 border-dashed border-amber-400/50 opacity-70 animate-[spin_25s_linear_infinite]" />
+          
+          {/* Sparkles floating around */}
+          <span className="absolute -top-4 left-6 text-3xl animate-[floatUp_2.5s_ease-in-out_infinite]">✨</span>
+          <span className="absolute bottom-6 -left-6 text-2xl animate-[floatUp_3s_ease-in-out_infinite_0.5s]">⭐</span>
+          <span className="absolute top-10 -right-8 text-3xl animate-[floatUp_2.2s_ease-in-out_infinite_1s]">✨</span>
+          <span className="absolute -bottom-4 right-10 text-2xl animate-[floatUp_2.8s_ease-in-out_infinite_0.3s]">⭐</span>
+
+          {/* Trophy Display */}
+          <div className="emoji-bounce text-9xl select-none drop-shadow-[0_12px_24px_rgba(251,191,36,0.6)] z-10 filter brightness-110">
+            🏆
+          </div>
+        </div>
+      ) : (
+        <div className="emoji-bounce text-8xl sm:text-9xl select-none" aria-hidden="true">
+          {pct >= 50 ? '🌟' : '💪'}
+        </div>
+      )}
 
       <div>
         <h2 className="font-fredoka text-4xl text-shimmer sm:text-5xl">

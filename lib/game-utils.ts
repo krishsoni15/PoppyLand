@@ -16,7 +16,8 @@ export function generateLetterChoices(correct: LetterEntry): LetterEntry[] {
 }
 
 export function generateNumberChoices(correct: NumberEntry): NumberEntry[] {
-  const pool = NUMBERS_DATA.filter((n) => n.number <= GAME_NUMBER_MAX)
+  // strictly limit choices to single digit numbers (0 to 9)
+  const pool = NUMBERS_DATA.filter((n) => n.number >= 0 && n.number <= 9)
   const wrong = shuffle(pool.filter((e) => e.number !== correct.number)).slice(0, 3)
   return shuffle([correct, ...wrong])
 }
@@ -26,5 +27,6 @@ export function getGameLetterPool() {
 }
 
 export function getGameNumberPool() {
-  return shuffle(NUMBERS_DATA.filter((n) => n.number <= GAME_NUMBER_MAX))
+  // strictly only return single digit numbers (0 to 9) shuffled
+  return shuffle(NUMBERS_DATA.filter((n) => n.number >= 0 && n.number <= 9))
 }

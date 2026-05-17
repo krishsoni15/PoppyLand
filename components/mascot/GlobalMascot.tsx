@@ -62,7 +62,7 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
     <div
       className="global-mascot-wrapper fixed bottom-2 right-3 z-50 flex flex-col items-end"
       style={{
-        width: 140,
+        width: 180,
         animation: 'poppyIdle 3s ease-in-out infinite',
       }}
     >
@@ -72,9 +72,10 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
           className="speech-bubble mb-3"
           style={{
             whiteSpace: 'normal',
-            maxWidth: 200,
-            fontSize: '14px',
+            maxWidth: 240,
+            fontSize: '15px',
             lineHeight: '1.4',
+            right: 15,
           }}
         >
           {speechText}
@@ -87,8 +88,8 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
         onClick={handleClick}
         className="relative border-none bg-transparent p-0 origin-bottom"
         style={{
-          width: 140,
-          height: 140,
+          width: 180,
+          height: 180,
           transition: 'transform 0.2s cubic-bezier(0.34,1.56,0.64,1)',
         }}
         onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.08)')}
@@ -97,7 +98,7 @@ export function GlobalMascot({ poppyState = 'idle' }: GlobalMascotProps) {
         onMouseUp={e    => (e.currentTarget.style.transform = 'scale(1.05)')}
         aria-label="Poppy the mascot — click for a tip!"
       >
-        <Poppy state={speechText ? 'idle' : poppyState} size={140} isSpeaking={isSpeaking} />
+        <Poppy state={speechText ? 'idle' : poppyState} size={180} isSpeaking={isSpeaking} />
       </button>
     </div>
   )
