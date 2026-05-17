@@ -4,8 +4,9 @@ import { Analytics } from '@vercel/analytics/react'
 import { SoundProvider } from '@/components/providers/SoundProvider'
 import { AppProvider } from '@/components/providers/AppProvider'
 import { MascotBridge } from '@/components/mascot/MascotBridge'
-import CustomCursor from '@/components/ui/CustomCursor'
 import { SITE_URL } from '@/lib/constants'
+import CustomCursor from '@/components/ui/CustomCursor'
+import StarTrail from '@/components/ui/StarTrail'
 import './globals.css'
 
 const fredoka = Fredoka({
@@ -128,6 +129,7 @@ export default function RootLayout({
       </head>
       <body className="font-nunito bg-bg min-h-[100dvh] antialiased">
         <CustomCursor />
+        <StarTrail />
         <SoundProvider>
           <AppProvider>
             {children}

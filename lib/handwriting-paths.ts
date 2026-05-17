@@ -1,5 +1,5 @@
-import { getTraceDots } from '@/lib/trace-dots'
-import { densifyPath, type NormPoint } from '@/lib/handwriting-validation'
+import { getTraceDots, getLetterSegments } from '@/lib/trace-dots'
+import { densifyPath, type NormPoint, type TraceKind } from '@/lib/handwriting-validation'
 
 export type HandwritingPhase = 'prewriting' | 'letters' | 'numbers'
 
@@ -11,9 +11,11 @@ export interface HandwritingActivity {
   emoji: string
   instruction: string
   hint: string
-  ghostPath: NormPoint[]
+  ghostPath: NormPoint[]        // flattened all segments — used for validation
+  ghostSegments?: NormPoint[][] // separate visual segments — used for rendering
   showGuides: boolean
   accent: string
+  traceKind: TraceKind
 }
 
 function line(x1: number, y1: number, x2: number, y2: number, steps = 8): NormPoint[] {
@@ -40,6 +42,13 @@ function fromDots(letter: string): NormPoint[] {
 
 function letterPath(letter: string): HandwritingActivity {
   const upper = letter.toUpperCase()
+  const multiStroke = new Set(['A','E','F','H','I','K','T','X','Y','B','D','G','P','R','Q','Z'])
+  const hint = multiStroke.has(upper)
+    ? 'Lift your pen between strokes — all strokes count!'
+    : 'Follow the glowing path with your finger.'
+  const segs = getLetterSegments(upper)
+  const ghostSegments = segs.map(seg => densifyPath(seg, 2.5))
+  const ghostPath = ghostSegments.flat()
   return {
     id: `letter-${upper}`,
     phase: 'letters',
@@ -47,49 +56,77 @@ function letterPath(letter: string): HandwritingActivity {
     label: upper,
     emoji: '🔤',
     instruction: `Trace the letter ${upper}. Start at the dot!`,
-    hint: 'Follow the glowing path with your finger.',
-    ghostPath: fromDots(upper),
+    hint,
+    ghostPath,
+    ghostSegments,
     showGuides: true,
     accent: '#FF6B6B',
+    traceKind: 'letter',
   }
 }
 
 function numberPath(n: number): HandwritingActivity {
   const paths: Record<number, NormPoint[]> = {
-    0: circle(50, 50, 32),
-    1: line(50, 18, 50, 82),
+    // 0: oval
+    0: circle(50, 50, 34),
+    // 1: straight line down
+    1: line(50, 12, 50, 88),
+    // 2: top arc, diagonal, bottom bar
     2: [
-      ...line(28, 22, 72, 22, 4),
-      ...line(72, 22, 28, 82, 6),
+      ...line(28, 30, 35, 18, 3),
+      ...line(35, 18, 65, 18, 4),
+      ...line(65, 18, 72, 30, 3),
+      ...line(72, 30, 28, 82, 8),
       ...line(28, 82, 72, 82, 4),
     ],
+    // 3: top arc right, middle, bottom arc right
     3: [
-      ...line(30, 20, 65, 20, 4),
-      ...line(65, 20, 65, 50, 4),
-      ...line(40, 50, 68, 50, 3),
-      ...line(68, 50, 68, 80, 4),
-      ...line(35, 80, 70, 80, 4),
+      ...line(28, 18, 65, 18, 4),
+      ...line(65, 18, 72, 30, 3),
+      ...line(72, 30, 55, 50, 4),
+      ...line(55, 50, 72, 68, 4),
+      ...line(72, 68, 65, 82, 3),
+      ...line(65, 82, 28, 82, 4),
     ],
-    4: [...line(55, 15, 30, 55, 5), ...line(30, 55, 75, 55, 4), ...line(55, 15, 55, 85, 4)],
+    // 4: left diagonal, crossbar, right spine
+    4: [
+      ...line(60, 12, 22, 60, 6),
+      ...line(22, 60, 78, 60, 5),
+      ...line(60, 12, 60, 88, 6),
+    ],
+    // 5: top bar left, spine down, arc right
     5: [
-      ...line(70, 18, 28, 18, 4),
-      ...line(28, 18, 28, 48, 4),
-      ...line(28, 48, 62, 48, 4),
-      ...line(62, 48, 70, 65, 4),
-      ...line(70, 65, 45, 85, 4),
-      ...line(45, 85, 28, 82, 3),
+      ...line(72, 12, 28, 12, 4),
+      ...line(28, 12, 28, 50, 4),
+      ...line(28, 50, 60, 50, 4),
+      ...line(60, 50, 72, 62, 3),
+      ...line(72, 62, 72, 72, 3),
+      ...line(72, 72, 60, 85, 3),
+      ...line(60, 85, 28, 82, 4),
     ],
+    // 6: arc from top, full circle at bottom
     6: [
-      ...line(65, 25, 40, 15, 4),
-      ...circle(48, 55, 28, 14).slice(0, 20),
-      ...line(48, 83, 70, 75, 3),
+      ...line(68, 18, 45, 12, 3),
+      ...line(45, 12, 25, 30, 4),
+      ...line(25, 30, 22, 55, 3),
+      ...circle(48, 68, 22, 16),
     ],
-    7: [...line(25, 18, 75, 18, 4), ...line(75, 18, 45, 85, 6)],
-    8: circle(50, 50, 32),
+    // 7: top bar, diagonal down
+    7: [
+      ...line(22, 12, 78, 12, 5),
+      ...line(78, 12, 42, 88, 8),
+    ],
+    // 8: top circle, bottom circle
+    8: [
+      ...circle(50, 35, 22, 16),
+      ...circle(50, 65, 26, 16),
+    ],
+    // 9: top circle, tail down
     9: [
-      ...circle(52, 38, 26, 12).slice(0, 16),
-      ...line(52, 64, 52, 85, 3),
-      ...line(35, 85, 70, 85, 3),
+      ...circle(50, 35, 26, 16),
+      ...line(76, 35, 72, 65, 4),
+      ...line(72, 65, 55, 85, 4),
+      ...line(55, 85, 35, 82, 3),
     ],
   }
 
@@ -104,6 +141,7 @@ function numberPath(n: number): HandwritingActivity {
     ghostPath: densifyPath(paths[n] ?? paths[0], 2.5),
     showGuides: true,
     accent: '#4D96FF',
+    traceKind: 'number',
   }
 }
 
@@ -114,11 +152,12 @@ const PREWRITING: HandwritingActivity[] = [
     title: 'Standing Line',
     label: '|',
     emoji: '📏',
-    instruction: 'Draw a tall line from top to bottom!',
-    hint: 'Standing lines go up and down.',
-    ghostPath: line(50, 12, 50, 88, 12),
+    instruction: 'Watch the finger, then drag from the green dot down!',
+    hint: 'Top to bottom — like rain falling!',
+    ghostPath: line(50, 15, 50, 85, 16),
     showGuides: false,
     accent: '#6BCB77',
+    traceKind: 'vertical-line',
   },
   {
     id: 'sleeping-line',
@@ -126,11 +165,12 @@ const PREWRITING: HandwritingActivity[] = [
     title: 'Sleeping Line',
     label: '—',
     emoji: '😴',
-    instruction: 'Draw a line across like a sleepy bridge!',
-    hint: 'Sleeping lines go side to side.',
-    ghostPath: line(12, 50, 88, 50, 12),
+    instruction: 'Drag from the green dot across to the other side!',
+    hint: 'Left to right — like a bridge!',
+    ghostPath: line(15, 50, 85, 50, 16),
     showGuides: false,
     accent: '#6BCB77',
+    traceKind: 'horizontal-line',
   },
   {
     id: 'diagonal-line',
@@ -143,6 +183,7 @@ const PREWRITING: HandwritingActivity[] = [
     ghostPath: line(22, 78, 78, 22, 12),
     showGuides: false,
     accent: '#4ECDC4',
+    traceKind: 'diagonal-line',
   },
   {
     id: 'curve',
@@ -152,15 +193,18 @@ const PREWRITING: HandwritingActivity[] = [
     emoji: '🌙',
     instruction: 'Make a soft curve like a smile!',
     hint: 'Curves are smooth and bendy.',
-    ghostPath: [
-      { x: 15, y: 55 },
-      { x: 30, y: 30 },
-      { x: 50, y: 25 },
-      { x: 70, y: 30 },
-      { x: 85, y: 55 },
-    ],
+    ghostPath: densifyPath([
+      { x: 12, y: 60 },
+      { x: 22, y: 38 },
+      { x: 35, y: 22 },
+      { x: 50, y: 18 },
+      { x: 65, y: 22 },
+      { x: 78, y: 38 },
+      { x: 88, y: 60 },
+    ], 2),
     showGuides: false,
     accent: '#A855F7',
+    traceKind: 'curve',
   },
   {
     id: 'zigzag',
@@ -170,15 +214,16 @@ const PREWRITING: HandwritingActivity[] = [
     emoji: '⚡',
     instruction: 'Go up, down, up, down like lightning!',
     hint: 'Zig zags have pointy corners.',
-    ghostPath: [
-      { x: 15, y: 70 },
-      { x: 35, y: 30 },
-      { x: 55, y: 70 },
-      { x: 75, y: 30 },
-      { x: 85, y: 70 },
-    ],
+    ghostPath: densifyPath([
+      { x: 12, y: 75 },
+      { x: 30, y: 25 },
+      { x: 48, y: 75 },
+      { x: 66, y: 25 },
+      { x: 84, y: 75 },
+    ], 2),
     showGuides: false,
     accent: '#FECA57',
+    traceKind: 'zigzag',
   },
   {
     id: 'circle-shape',
@@ -191,6 +236,7 @@ const PREWRITING: HandwritingActivity[] = [
     ghostPath: circle(50, 50, 34),
     showGuides: false,
     accent: '#FF6BB5',
+    traceKind: 'shape',
   },
   {
     id: 'square-shape',
@@ -208,6 +254,7 @@ const PREWRITING: HandwritingActivity[] = [
     ],
     showGuides: false,
     accent: '#4D96FF',
+    traceKind: 'shape',
   },
   {
     id: 'triangle-shape',
@@ -224,6 +271,7 @@ const PREWRITING: HandwritingActivity[] = [
     ],
     showGuides: false,
     accent: '#FF9F43',
+    traceKind: 'shape',
   },
 ]
 
@@ -249,6 +297,7 @@ const LOWERCASE: HandwritingActivity[] = [
     ),
     showGuides: true,
     accent: '#FF6B6B',
+    traceKind: 'letter',
   },
   {
     id: 'letter-b-lower',
@@ -273,6 +322,7 @@ const LOWERCASE: HandwritingActivity[] = [
     ),
     showGuides: true,
     accent: '#FF6B6B',
+    traceKind: 'letter',
   },
   {
     id: 'letter-c-lower',
@@ -294,6 +344,7 @@ const LOWERCASE: HandwritingActivity[] = [
     ),
     showGuides: true,
     accent: '#FF6B6B',
+    traceKind: 'letter',
   },
 ]
 

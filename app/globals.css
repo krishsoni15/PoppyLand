@@ -1443,12 +1443,21 @@ body {
   animation: starFade 0.8s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
 }
 
-/* Handwriting trace lesson — native touch, no custom cursor */
-body.trace-lesson-active .custom-cursor-root,
-body.trace-lesson-active .cursor-trail-root {
+/* Handwriting trace lesson — hide star trail so it doesn't interfere with drawing */
+body.trace-lesson-active .star-trail-root {
   display: none !important;
 }
 
 body.trace-lesson-active {
-  cursor: auto !important;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+body.trace-lesson-active .global-mascot-wrapper {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.trace-canvas-root canvas {
+  pointer-events: none !important;
 }

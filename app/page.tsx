@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import PageShell from '@/components/ui/PageShell'
 import NameModal from '@/components/ui/NameModal'
-import { useKeyboard } from '@/hooks/useKeyboard'
 import { useApp } from '@/components/providers/AppProvider'
 import { useSound } from '@/components/providers/SoundProvider'
 import { useSpeech } from '@/hooks/useSpeech'
@@ -13,6 +12,7 @@ import { APP_NAME } from '@/lib/constants'
 import { getCollectionCount, TOTAL_STICKERS } from '@/lib/collection'
 import { CATEGORIES } from '@/lib/categories'
 import AnimatedBackground from '@/components/home/AnimatedBackground'
+import KeyTypeDisplay from '@/components/home/KeyTypeDisplay'
 
 /* ── Dashboard cards ── */
 const cards = [
@@ -123,21 +123,9 @@ export default function HomePage() {
     router.push('/myname')
   }
 
-  useKeyboard(
-    useCallback(
-      (event) => {
-        const k = event.key
-        const num = parseInt(k, 10)
-        if (num >= 1 && num <= cards.length) handleCardTap(cards[num - 1])
-        if (k === 'm' || k === 'M') toggleMute()
-      },
-      [handleCardTap, toggleMute],
-    ),
-    !nameOpen,
-  )
-
   return (
     <PageShell variant="home">
+      <KeyTypeDisplay />
       <AnimatedBackground />
 
       <NameModal

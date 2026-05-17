@@ -1,133 +1,128 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 
+/**
+ * CustomCursor — zero React state, pure DOM manipulation.
+ * Uses pointermove so it works even when canvas has pointer capture.
+ * The cursor element is always in the DOM; we just move it via transform.
+ */
 export default function CustomCursor() {
-  const [position, setPosition] = useState({ x: -100, y: -100 })
-  const [isPointer, setIsPointer] = useState(false)
-  const [clicked, setClicked] = useState(false)
-  const [isVisible, setIsVisible] = useState(false)
-  const rafRef = useRef<number>(0)
-
   useEffect(() => {
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-    if (isTouchDevice) return
+    if (typeof window === 'undefined') return
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    if (isTouch) return
 
-    let targetX = -100
-    let targetY = -100
-    let currentX = -100
-    let currentY = -100
+    // Build the cursor DOM directly — no React re-renders ever
+    const root = document.createElement('div')
+    root.setAttribute('aria-hidden', 'true')
+    root.style.cssText = `
+      position: fixed;
+      left: 0; top: 0;
+      width: 0; height: 0;
+      z-index: 999999;
+      pointer-events: none;
+      opacity: 0;
+      will-change: transform;
+    `
 
-    const animate = () => {
-      currentX += (targetX - currentX) * 0.95
-      currentY += (targetY - currentY) * 0.95
-      setPosition({ x: currentX, y: currentY })
-      rafRef.current = requestAnimationFrame(animate)
+    // Arrow SVG
+    const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    arrow.setAttribute('width', '38')
+    arrow.setAttribute('height', '38')
+    arrow.setAttribute('viewBox', '0 0 24 24')
+    arrow.setAttribute('fill', 'none')
+    arrow.style.cssText = `
+      position: absolute;
+      top: -2px; left: -4px;
+      filter: drop-shadow(0 3px 8px rgba(255,107,107,0.8));
+      display: block;
+    `
+    const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    arrowPath.setAttribute('d', 'M4 2L4 18L8.5 13.5L11.5 20L13.5 19L10.5 12.5L17 12.5L4 2Z')
+    arrowPath.setAttribute('fill', '#FF6B6B')
+    arrowPath.setAttribute('stroke', 'white')
+    arrowPath.setAttribute('stroke-width', '1.8')
+    arrowPath.setAttribute('stroke-linejoin', 'round')
+    arrow.appendChild(arrowPath)
+
+    // Hand SVG
+    const hand = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    hand.setAttribute('width', '46')
+    hand.setAttribute('height', '46')
+    hand.setAttribute('viewBox', '0 0 24 24')
+    hand.setAttribute('fill', 'none')
+    hand.style.cssText = `
+      position: absolute;
+      top: -2px; left: -4px;
+      filter: drop-shadow(0 3px 8px rgba(168,85,247,0.8));
+      display: none;
+    `
+    const handPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    handPath.setAttribute('d', 'M9 12V6a1.5 1.5 0 0 1 3 0v4.5M12 10.5V5a1.5 1.5 0 0 1 3 0v5.5M15 10V7a1.5 1.5 0 0 1 3 0v6c0 3.866-2.686 7-6 7-3.314 0-6-3.134-6-7v-2l1.293-1.293A1 1 0 0 1 9 9.414V12')
+    handPath.setAttribute('stroke', '#A855F7')
+    handPath.setAttribute('stroke-width', '1.8')
+    handPath.setAttribute('stroke-linecap', 'round')
+    handPath.setAttribute('stroke-linejoin', 'round')
+    handPath.setAttribute('fill', '#FECA57')
+    hand.appendChild(handPath)
+
+    root.appendChild(arrow)
+    root.appendChild(hand)
+    document.body.appendChild(root)
+
+    // Inject cursor:none globally
+    const style = document.createElement('style')
+    style.textContent = '* { cursor: none !important; }'
+    document.head.appendChild(style)
+
+    let cx = -200
+    let cy = -200
+    let isPointer = false
+    let isDown = false
+
+    const setPos = (x: number, y: number, down: boolean) => {
+      cx = x; cy = y; isDown = down
+      const s = down ? 0.85 : 1
+      root.style.transform = `translate(${x}px, ${y}px) scale(${s})`
+      root.style.opacity = '1'
     }
-    rafRef.current = requestAnimationFrame(animate)
 
-    const onMouseMove = (e: MouseEvent) => {
-      targetX = e.clientX
-      targetY = e.clientY
-      if (!isVisible) setIsVisible(true)
+    const onMove = (e: PointerEvent) => {
+      setPos(e.clientX, e.clientY, isDown)
 
       const target = e.target as HTMLElement
-      const clickable =
-        target.tagName.toLowerCase() === 'a' ||
-        target.tagName.toLowerCase() === 'button' ||
-        target.closest('a') !== null ||
-        target.closest('button') !== null ||
-        target.getAttribute('role') === 'button' ||
-        window.getComputedStyle(target).cursor === 'pointer'
+      const ptr =
+        target.tagName === 'A' ||
+        target.tagName === 'BUTTON' ||
+        !!target.closest('a') ||
+        !!target.closest('button') ||
+        target.getAttribute('role') === 'button'
 
-      setIsPointer(clickable)
+      if (ptr !== isPointer) {
+        isPointer = ptr
+        arrow.style.display = ptr ? 'none' : 'block'
+        hand.style.display = ptr ? 'block' : 'none'
+      }
     }
 
-    const onMouseDown = () => setClicked(true)
-    const onMouseUp = () => setClicked(false)
-    const onMouseLeave = () => setIsVisible(false)
-    const onMouseEnter = () => setIsVisible(true)
+    const onDown = (e: PointerEvent) => { isDown = true;  setPos(e.clientX, e.clientY, true) }
+    const onUp   = (e: PointerEvent) => { isDown = false; setPos(cx, cy, false) }
 
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mousedown', onMouseDown)
-    window.addEventListener('mouseup', onMouseUp)
-    document.addEventListener('mouseleave', onMouseLeave)
-    document.addEventListener('mouseenter', onMouseEnter)
+    window.addEventListener('pointermove', onMove, { passive: true })
+    window.addEventListener('pointerdown', onDown, { passive: true })
+    window.addEventListener('pointerup', onUp, { passive: true })
+    window.addEventListener('pointercancel', onUp, { passive: true })
 
     return () => {
-      cancelAnimationFrame(rafRef.current)
-      window.removeEventListener('mousemove', onMouseMove)
-      window.removeEventListener('mousedown', onMouseDown)
-      window.removeEventListener('mouseup', onMouseUp)
-      document.removeEventListener('mouseleave', onMouseLeave)
-      document.removeEventListener('mouseenter', onMouseEnter)
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onUp)
+      document.body.removeChild(root)
+      document.head.removeChild(style)
     }
-  }, [isVisible])
+  }, [])
 
-  if (!isVisible) return null
-
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: `
-        * { cursor: none !important; }
-      ` }} />
-
-      {/* Actual Cursor */}
-      <div
-        className="pointer-events-none fixed z-[9999]"
-        style={{
-          left: position.x,
-          top: position.y,
-          transform: 'translate(-4px, -2px)',
-        }}
-        aria-hidden="true"
-      >
-        {isPointer ? (
-          /* Hand pointer cursor (BIGGER and Magic) */
-          <svg
-            width={clicked ? 38 : 46}
-            height={clicked ? 38 : 46}
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              filter: 'drop-shadow(0 4px 10px rgba(168,85,247,0.7))',
-              transition: 'width 0.1s, height 0.1s',
-            }}
-          >
-            <path
-              d="M9 12V6a1.5 1.5 0 0 1 3 0v4.5M12 10.5V5a1.5 1.5 0 0 1 3 0v5.5M15 10V7a1.5 1.5 0 0 1 3 0v6c0 3.866-2.686 7-6 7-3.314 0-6-3.134-6-7v-2l1.293-1.293A1 1 0 0 1 9 9.414V12"
-              stroke="#A855F7"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="#FECA57"
-            />
-          </svg>
-        ) : (
-          /* Arrow cursor (BIGGER) */
-          <svg
-            width={clicked ? 32 : 38}
-            height={clicked ? 32 : 38}
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            style={{
-              filter: 'drop-shadow(0 4px 10px rgba(255,107,107,0.7))',
-              transition: 'width 0.1s, height 0.1s',
-              transform: clicked ? 'scale(0.9)' : 'scale(1)',
-            }}
-          >
-            <path
-              d="M4 2L4 18L8.5 13.5L11.5 20L13.5 19L10.5 12.5L17 12.5L4 2Z"
-              fill="#FF6B6B"
-              stroke="white"
-              strokeWidth="1.8"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-      </div>
-    </>
-  )
+  return null // renders nothing — cursor is pure DOM
 }

@@ -1,7 +1,5 @@
 'use client'
 
-import StarTrail from '@/components/ui/StarTrail'
-
 type PageVariant = 'warm' | 'cool' | 'play' | 'home'
 
 const variantStyles: Record<PageVariant, string> = {
@@ -29,9 +27,6 @@ export default function PageShell({ variant = 'warm', children }: PageShellProps
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.55),transparent_55%)]" />
       <div className="relative z-10">{children}</div>
-
-      {/* Magic Interactive Cursor Star Trail */}
-      <StarTrail />
     </div>
   )
 }

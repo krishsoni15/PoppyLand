@@ -17,11 +17,9 @@ export function saveHandwritingProgress(state: HandwritingProgressState): void {
   writeStorage(STORAGE_KEYS.handwriting, state)
 }
 
-export function isActivityUnlocked(id: string, progress: HandwritingProgressState): boolean {
-  const index = ACTIVITY_ORDER.indexOf(id)
-  if (index <= 0) return true
-  const prevId = ACTIVITY_ORDER[index - 1]
-  return progress.completed.includes(prevId)
+export function isActivityUnlocked(_id: string, _progress: HandwritingProgressState): boolean {
+  // All activities are always unlocked — no sequential locking
+  return true
 }
 
 export function completeActivity(
