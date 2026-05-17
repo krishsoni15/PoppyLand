@@ -26,4 +26,5 @@ export const STORAGE_KEYS = {
   streak: 'letterpop_streak',
   profile: 'letterpop_profile',
   stats: 'letterpop_stats',
+  handwriting: 'letterpop_handwriting',
 } as const

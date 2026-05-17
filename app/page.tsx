@@ -55,7 +55,7 @@ const cards = [
     emoji: '🖍️',
     bg: '#6BCB77',
     shadow: '#3D9E48',
-    speak: "Let's trace letters!",
+    speak: "Let's trace lines and letters!",
   },
   {
     href: '/bubbles',

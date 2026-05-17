@@ -14,7 +14,7 @@ Built with modern web technologies, PoppyLand focuses heavily on **visual aesthe
 * **Dashboard (`/`)**: The main hub. Enter your name to wake up Poppy the star! Displays your current XP, Level, Daily Streak, and offers access to all minigames.
 * **Alphabet (`/alphabet`)**: Interactive A-Z flashcards. Tap letters to hear them pronounced ("A is for Apple 🍎"). Includes letter colors, words, and emojis.
 * **Numbers (`/numbers`)**: Counting practice from 1 to 20 with visual emoji aids (e.g., 3 balloons 🎈🎈🎈) and TTS voice readout.
-* **Trace (`/trace`)**: A fine-motor skill module for tracing letters or dots.
+* **Trace Valley (`/trace`)**: Mobile-first handwriting playground — pre-writing lines & shapes, A–Z letters, lowercase a–c, and 0–9 numbers. React Konva canvas with ghost paths, voice guidance, stars, XP, and unlock progression.
 * **Game (`/game`)**: A quiz/game board to test the child's knowledge of what they've learned.
 * **Speak (`/speak`)**: Speech practice using the Web Speech API to encourage kids to pronounce words out loud.
 * **Bubbles (`/bubbles`)**: A satisfying pop-the-bubble minigame for casual play and hand-eye coordination.
@@ -62,6 +62,7 @@ Built with modern web technologies, PoppyLand focuses heavily on **visual aesthe
 * **Audio Synthesis**: [Tone.js](https://tonejs.github.io/)
 * **Voice**: Web Speech API
 * **Effects**: Canvas Confetti
+* **Handwriting Canvas**: React Konva (touch tracing)
 * **Icons**: `lucide-react`
 * **Deployment**: Optimized for Vercel with Analytics (`@vercel/analytics`)
 
