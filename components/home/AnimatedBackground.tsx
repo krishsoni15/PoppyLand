@@ -33,8 +33,6 @@ function AnimatedBackground() {
   useEffect(() => {
     // Start ambient sounds
     setEnvironmentWeather(season, false).catch(console.error)
-    let timeoutId: NodeJS.Timeout;
-    let isActive = true;
 
     if (season === 'monsoon') {
       setIsRaining(true);
@@ -56,11 +54,6 @@ function AnimatedBackground() {
         setShowRainbow(false);
       }
     }
-
-    return () => {
-      isActive = false;
-      clearTimeout(timeoutId);
-    };
   }, [season, isNight])
 
   // Airplane/Santa Loop
