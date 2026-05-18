@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 
 export type DayNightPhase = 'day' | 'sunset' | 'night' | 'sunrise'
+export type Season = 'summer' | 'monsoon' | 'winter'
 
 export interface DayNightState {
   phase: DayNightPhase
@@ -9,58 +10,69 @@ export interface DayNightState {
   moonPosition: number
   isNight: boolean
   skyColors: string[]
+  season: Season
+  setSeason: (s: Season) => void
   toggleManual: (targetPhase?: 'day' | 'night') => void
 }
 
-const CYCLE_DURATION_MS = 120000 // 2 minutes
+const CYCLE_DURATION_MS = 120000 // 2 minutes full day/night loop
 
-// Color stops based on the 120s loop
-const COLOR_STOPS = [
-  { time: 0, colors: ['#FFB347', '#FF8C69', '#87CEEB'] },   // Sunrise 0:00
-  { time: 15000, colors: ['#87CEEB', '#98D8F0', '#E0F4FF'] }, // Morning 0:15
-  { time: 30000, colors: ['#4FC3F7', '#29B6F6', '#B3E5FC'] }, // Midday 0:30
-  { time: 45000, colors: ['#64B5F6', '#7986CB', '#CE93D8'] }, // Afternoon 0:45
-  { time: 60000, colors: ['#FF7043', '#FF8A65', '#FFCC02'] }, // Sunset 1:00
-  { time: 75000, colors: ['#4A148C', '#7B1FA2', '#FF6F00'] }, // Dusk 1:15
-  { time: 90000, colors: ['#0D0D2B', '#1A1A4E', '#2D1B69'] }, // Night 1:30
-  { time: 105000, colors: ['#050510', '#0A0A2E', '#1A0A3D'] }, // Midnight 1:45
-  { time: 120000, colors: ['#FFB347', '#FF8C69', '#87CEEB'] }, // Loop back
+const SUMMER_COLORS = [
+  { time: 0, colors: ['#FFB347', '#FF8C69', '#87CEEB'] },
+  { time: 15000, colors: ['#87CEEB', '#98D8F0', '#E0F4FF'] },
+  { time: 30000, colors: ['#4FC3F7', '#29B6F6', '#B3E5FC'] },
+  { time: 45000, colors: ['#64B5F6', '#7986CB', '#CE93D8'] },
+  { time: 60000, colors: ['#FF7043', '#FF8A65', '#FFCC02'] },
+  { time: 75000, colors: ['#4A148C', '#7B1FA2', '#FF6F00'] },
+  { time: 90000, colors: ['#0D0D2B', '#1A1A4E', '#2D1B69'] },
+  { time: 105000, colors: ['#050510', '#0A0A2E', '#1A0A3D'] },
+  { time: 120000, colors: ['#FFB347', '#FF8C69', '#87CEEB'] },
+]
+
+const MONSOON_COLORS = [
+  { time: 0, colors: ['#FFB347', '#A09CA3', '#707075'] },
+  { time: 15000, colors: ['#707075', '#8C8C94', '#B0B0B8'] },
+  { time: 30000, colors: ['#606068', '#7A7A82', '#9696A0'] },
+  { time: 45000, colors: ['#585860', '#6C6C75', '#868690'] },
+  { time: 60000, colors: ['#FF7043', '#8C8C94', '#707075'] },
+  { time: 75000, colors: ['#4A148C', '#4A4A52', '#383840'] },
+  { time: 90000, colors: ['#0D0D2B', '#1A1A24', '#202028'] },
+  { time: 105000, colors: ['#050510', '#0A0A18', '#101015'] },
+  { time: 120000, colors: ['#FFB347', '#A09CA3', '#707075'] },
+]
+
+const WINTER_COLORS = [
+  { time: 0, colors: ['#FFB347', '#FF8C69', '#A8DADC'] },
+  { time: 15000, colors: ['#A8DADC', '#CBE5F0', '#EAF4F4'] },
+  { time: 30000, colors: ['#BDE0FE', '#A2D2FF', '#C8E7FF'] },
+  { time: 45000, colors: ['#A2D2FF', '#BDE0FE', '#C8E7FF'] },
+  { time: 60000, colors: ['#FFB347', '#FF8C69', '#C8E7FF'] },
+  { time: 75000, colors: ['#4A148C', '#7B1FA2', '#5068A8'] },
+  { time: 90000, colors: ['#0D0D2B', '#1A1A4E', '#1D2D5B'] },
+  { time: 105000, colors: ['#050510', '#0A0A2E', '#1A0A3D'] },
+  { time: 120000, colors: ['#FFB347', '#FF8C69', '#A8DADC'] },
 ]
 
 function hexToRgb(hex: string) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-  return result
-    ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
-    : [0, 0, 0]
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  return r ? [parseInt(r[1], 16), parseInt(r[2], 16), parseInt(r[3], 16)] : [0, 0, 0]
 }
 
-function interpolateColor(color1: string, color2: string, factor: number) {
-  const rgb1 = hexToRgb(color1)
-  const rgb2 = hexToRgb(color2)
-  const result = rgb1.map((c, i) => Math.round(c + factor * (rgb2[i] - c)))
-  return `rgb(${result[0]}, ${result[1]}, ${result[2]})`
+function interpolateColor(c1: string, c2: string, f: number) {
+  const a = hexToRgb(c1), b = hexToRgb(c2)
+  const r = a.map((v, i) => Math.round(v + f * (b[i] - v)))
+  return `rgb(${r[0]},${r[1]},${r[2]})`
 }
 
-function getSkyColors(elapsed: number): string[] {
-  let startStop = COLOR_STOPS[0]
-  let endStop = COLOR_STOPS[1]
-
-  for (let i = 0; i < COLOR_STOPS.length - 1; i++) {
-    if (elapsed >= COLOR_STOPS[i].time && elapsed < COLOR_STOPS[i + 1].time) {
-      startStop = COLOR_STOPS[i]
-      endStop = COLOR_STOPS[i + 1]
-      break
-    }
+function getSkyColors(elapsed: number, season: Season): string[] {
+  const stops = season === 'winter' ? WINTER_COLORS : season === 'monsoon' ? MONSOON_COLORS : SUMMER_COLORS
+  let s0 = stops[0], s1 = stops[1]
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (elapsed >= stops[i].time && elapsed < stops[i + 1].time) { s0 = stops[i]; s1 = stops[i + 1]; break }
   }
-
-  const segmentDuration = endStop.time - startStop.time
-  const factor = (elapsed - startStop.time) / segmentDuration
-
-  return [
-    interpolateColor(startStop.colors[0], endStop.colors[0], factor),
-    interpolateColor(startStop.colors[1], endStop.colors[1], factor),
-    interpolateColor(startStop.colors[2], endStop.colors[2], factor),
-  ]
+  const d = s1.time - s0.time
+  const f = d > 0 ? (elapsed - s0.time) / d : 0
+  return [interpolateColor(s0.colors[0], s1.colors[0], f), interpolateColor(s0.colors[1], s1.colors[1], f), interpolateColor(s0.colors[2], s1.colors[2], f)]
 }
 
 function getPhase(ms: number): DayNightPhase {
@@ -70,119 +82,100 @@ function getPhase(ms: number): DayNightPhase {
   return 'day'
 }
 
-function getSunPosition(ms: number): number {
-  return ms <= 60000 ? ms / 60000 : 1.1
-}
-
-function getMoonPosition(ms: number): number {
+function getSunPos(ms: number) { return ms <= 60000 ? ms / 60000 : 1.1 }
+function getMoonPos(ms: number) {
   if (ms > 50000 && ms <= 120000) return (ms - 50000) / 70000
-  if (ms <= 10000) return 1 + (ms / 70000)
+  if (ms <= 10000) return 1 + ms / 70000
   return 1.1
 }
 
 export function useDayNightCycle(): DayNightState {
-  // Instead of re-rendering at 60fps, we update React state only
-  // when something visually meaningful changes (~4 times/sec max)
-  const [snapshot, setSnapshot] = useState({
-    elapsedMs: 30000,
-    phase: 'day' as DayNightPhase,
-    sunPosition: 0.5,
-    moonPosition: 1.1,
-    isNight: false,
-    skyColors: ['#4FC3F7', '#29B6F6', '#B3E5FC'],
+  const [season, setSeasonRaw] = useState<Season>('summer')
+  const manualSeasonRef = useRef(false)
+  const seasonRef = useRef<Season>('summer')
+
+  const [snapshot, setSnapshot] = useState(() => {
+    return { elapsedMs: 0, phase: 'sunrise' as DayNightPhase, sunPosition: 0, moonPosition: 1.1, isNight: false, skyColors: getSkyColors(0, 'summer') }
   })
 
-  const elapsedRef = useRef(30000)
+  useEffect(() => { seasonRef.current = season }, [season])
+
+  const elapsedRef = useRef(0)
   const manualOverrideRef = useRef(false)
   const manualTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const animationRef = useRef<number | null>(null)
+  const animRef = useRef<number | null>(null)
   const lastTimeRef = useRef<number | null>(null)
-  const lastSnapshotTimeRef = useRef(0)
+  const lastSnapRef = useRef(0)
 
+  // No longer needed to auto-detect real day, we will cycle internally
+
+  // Main animation loop - runs forever
   useEffect(() => {
     const tick = (time: number) => {
-      if (lastTimeRef.current === null) {
-        lastTimeRef.current = time
-      }
-      const deltaTime = time - lastTimeRef.current
+      if (lastTimeRef.current === null) lastTimeRef.current = time
+      const dt = time - lastTimeRef.current
       lastTimeRef.current = time
 
-      // Advance the clock
       if (!manualOverrideRef.current && document.visibilityState === 'visible') {
-        elapsedRef.current = (elapsedRef.current + deltaTime) % CYCLE_DURATION_MS
+        const prevElapsed = elapsedRef.current;
+        elapsedRef.current = (elapsedRef.current + dt) % CYCLE_DURATION_MS
+        
+        // When a full day completes, rotate the season if not manually overridden
+        if (prevElapsed > elapsedRef.current) {
+          if (!manualSeasonRef.current) {
+            setSeasonRaw(prev => prev === 'summer' ? 'monsoon' : prev === 'monsoon' ? 'winter' : 'summer')
+          }
+          // Reset manual season override on the next day cycle so it doesn't get permanently stuck
+          manualSeasonRef.current = false;
+        }
       }
 
-      // Only update CSS variables directly on the DOM (no React re-render)
       const ms = elapsedRef.current
-      const colors = getSkyColors(ms)
+      const cs = seasonRef.current
+      const colors = getSkyColors(ms, cs)
       const isNightNow = ms >= 60000 && ms < 120000
       const phaseNow = getPhase(ms)
 
       document.body.style.setProperty('--sky-top', colors[0])
       document.body.style.setProperty('--sky-mid', colors[1])
       document.body.style.setProperty('--sky-bot', colors[2])
-      document.body.style.setProperty('--ground-color', isNightNow ? '#1B5E20' : '#4CAF50')
-      document.body.style.setProperty('--tree-color', isNightNow ? '#0D3310' : '#388E3C')
+
+      let gc = isNightNow ? '#1B5E20' : '#4CAF50'
+      let tc = isNightNow ? '#0D3310' : '#388E3C'
+      if (cs === 'winter') { gc = isNightNow ? '#B0BEC5' : '#ECEFF1'; tc = isNightNow ? '#263238' : '#78909C' }
+      else if (cs === 'monsoon') { gc = isNightNow ? '#143C16' : '#388E3C'; tc = isNightNow ? '#09250B' : '#2E7D32' }
+
+      document.body.style.setProperty('--ground-color', gc)
+      document.body.style.setProperty('--tree-color', tc)
       document.body.style.setProperty('--env-filter', (phaseNow === 'sunset' || phaseNow === 'sunrise') ? 'sepia(0.3)' : 'none')
 
-      // Only trigger a React state update every 250ms (4 times/sec)
-      // This is enough for smooth sun/moon position movement
-      if (time - lastSnapshotTimeRef.current > 250) {
-        lastSnapshotTimeRef.current = time
-        setSnapshot({
-          elapsedMs: ms,
-          phase: phaseNow,
-          sunPosition: getSunPosition(ms),
-          moonPosition: getMoonPosition(ms),
-          isNight: isNightNow,
-          skyColors: colors,
-        })
+      if (time - lastSnapRef.current > 250) {
+        lastSnapRef.current = time
+        setSnapshot({ elapsedMs: ms, phase: phaseNow, sunPosition: getSunPos(ms), moonPosition: getMoonPos(ms), isNight: isNightNow, skyColors: colors })
       }
-
-      animationRef.current = requestAnimationFrame(tick)
+      animRef.current = requestAnimationFrame(tick)
     }
-
-    animationRef.current = requestAnimationFrame(tick)
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current)
-    }
+    animRef.current = requestAnimationFrame(tick)
+    return () => { if (animRef.current) cancelAnimationFrame(animRef.current) }
   }, [])
 
-  const toggleManual = useCallback((targetPhase?: 'day' | 'night') => {
+  const toggleManual = useCallback((tp?: 'day' | 'night') => {
     manualOverrideRef.current = true
-    if (targetPhase === 'day') {
-      elapsedRef.current = 30000
-    } else if (targetPhase === 'night') {
-      elapsedRef.current = 90000
-    } else {
-      elapsedRef.current = elapsedRef.current < 60000 ? 90000 : 30000
-    }
-
-    // Force immediate snapshot
+    elapsedRef.current = tp === 'day' ? 30000 : tp === 'night' ? 90000 : (elapsedRef.current < 60000 ? 90000 : 30000)
     const ms = elapsedRef.current
-    setSnapshot({
-      elapsedMs: ms,
-      phase: getPhase(ms),
-      sunPosition: getSunPosition(ms),
-      moonPosition: getMoonPosition(ms),
-      isNight: ms >= 60000 && ms < 120000,
-      skyColors: getSkyColors(ms),
-    })
-
+    setSnapshot({ elapsedMs: ms, phase: getPhase(ms), sunPosition: getSunPos(ms), moonPosition: getMoonPos(ms), isNight: ms >= 60000 && ms < 120000, skyColors: getSkyColors(ms, seasonRef.current) })
     if (manualTimerRef.current) clearTimeout(manualTimerRef.current)
-    manualTimerRef.current = setTimeout(() => {
-      manualOverrideRef.current = false
-      lastTimeRef.current = null // Reset so delta doesn't jump
-    }, 30000)
+    manualTimerRef.current = setTimeout(() => { manualOverrideRef.current = false; lastTimeRef.current = null }, 15000)
   }, [])
 
-  return {
-    phase: snapshot.phase,
-    progress: snapshot.elapsedMs / CYCLE_DURATION_MS,
-    sunPosition: snapshot.sunPosition,
-    moonPosition: snapshot.moonPosition,
-    isNight: snapshot.isNight,
-    skyColors: snapshot.skyColors,
-    toggleManual,
-  }
+  const setSeason = useCallback((s: Season) => {
+    manualSeasonRef.current = true
+    setSeasonRaw(s)
+    elapsedRef.current = 5000 // Start near sunrise for dramatic reveal
+    manualOverrideRef.current = true
+    if (manualTimerRef.current) clearTimeout(manualTimerRef.current)
+    manualTimerRef.current = setTimeout(() => { manualOverrideRef.current = false; lastTimeRef.current = null }, 3000)
+  }, [])
+
+  return { phase: snapshot.phase, progress: snapshot.elapsedMs / CYCLE_DURATION_MS, sunPosition: snapshot.sunPosition, moonPosition: snapshot.moonPosition, isNight: snapshot.isNight, skyColors: snapshot.skyColors, season, setSeason, toggleManual }
 }

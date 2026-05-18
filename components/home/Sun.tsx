@@ -29,8 +29,8 @@ function Sun({ position, phase, onClickManualToggle }: SunProps) {
   const y = 55 - (Math.sin(position * Math.PI) * 45)
 
   let opacity = 1
-  if (position > 0.85) opacity = Math.max(0, 1 - ((position - 0.85) * 6.66)) 
-  if (position < 0.15) opacity = Math.min(1, position * 6.66) 
+  if (position > 0.85) opacity = Math.max(0, 1 - ((position - 0.85) * 6.66))
+  if (position < 0.15) opacity = Math.min(1, position * 6.66)
 
   const isSunset = phase === 'sunset' || phase === 'sunrise' || position > 0.8 || position < 0.2
   const sunColor = isSunset ? '#FF7043' : '#FFD700'
@@ -38,20 +38,20 @@ function Sun({ position, phase, onClickManualToggle }: SunProps) {
   const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
     if (onClickManualToggle) onClickManualToggle()
-    
+
     if (isSpeaking) return
     const text = SUN_PHRASES[Math.floor(Math.random() * SUN_PHRASES.length)]
     setSpeechText(text)
     setIsSpeaking(true)
     speak(text)
-    
+
     setTimeout(() => setIsSpeaking(false), 4000)
   }
 
   if (position > 1.1 || position < -0.1 || opacity <= 0) return null
 
   return (
-    <div 
+    <div
       className="absolute z-[1] pointer-events-auto"
       style={{
         left: `${x}%`,
@@ -66,20 +66,20 @@ function Sun({ position, phase, onClickManualToggle }: SunProps) {
           <SpeechBubble text={speechText} visible={isSpeaking} direction="down" />
         </div>
 
-        <div 
+        <div
           onClick={handleInteraction}
           onTouchStart={handleInteraction}
           className="relative w-[120px] h-[120px] rounded-full cursor-pointer touch-manipulation"
           style={{ backgroundColor: sunColor, transition: 'background-color 1s' }}
         >
           {/* Simple glow ring — way cheaper than box-shadow */}
-          <div 
+          <div
             className="absolute inset-[-16px] rounded-full opacity-40"
             style={{ backgroundColor: sunColor, filter: 'blur(16px)', transition: 'background-color 1s' }}
           />
 
           {/* Rays — simple CSS lines, no SVG overhead */}
-          <div 
+          <div
             className="absolute inset-[-20px] animate-[spin_20s_linear_infinite]"
             style={{ transition: 'color 1s', color: sunColor }}
           >

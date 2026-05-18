@@ -35,20 +35,20 @@ function Moon({ position, onClickManualToggle }: MoonProps) {
   const handleInteraction = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
     if (onClickManualToggle) onClickManualToggle()
-    
+
     if (isSpeaking) return
     const text = MOON_PHRASES[Math.floor(Math.random() * MOON_PHRASES.length)]
     setSpeechText(text)
     setIsSpeaking(true)
     speak(text)
-    
+
     setTimeout(() => setIsSpeaking(false), 4500)
   }
 
   if (position > 1.1 || position < -0.1 || opacity <= 0) return null
 
   return (
-    <div 
+    <div
       className="absolute z-[1] pointer-events-auto"
       style={{
         left: `${x}%`,
@@ -63,14 +63,14 @@ function Moon({ position, onClickManualToggle }: MoonProps) {
           <SpeechBubble text={speechText} visible={isSpeaking} direction="down" />
         </div>
 
-        <div 
+        <div
           onClick={handleInteraction}
           onTouchStart={handleInteraction}
           className="relative w-[110px] h-[110px] rounded-full cursor-pointer touch-manipulation"
           style={{ backgroundColor: '#FFFDE7' }}
         >
           {/* Simple glow — cheaper than box-shadow */}
-          <div 
+          <div
             className="absolute inset-[-14px] rounded-full bg-[#FFFDE7] opacity-30"
             style={{ filter: 'blur(14px)' }}
           />

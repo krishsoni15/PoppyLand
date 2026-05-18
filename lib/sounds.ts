@@ -203,3 +203,44 @@ export const setMusicMood = (mood: MusicMood) => {
 }
 
 export const isMusicPlaying = () => isBgPlaying
+
+/* ───── Ambient Weather Sounds ───── */
+
+let envNoise: InstanceType<typeof import('tone').Noise> | null = null
+let envFilter: InstanceType<typeof import('tone').Filter> | null = null
+let currentSeasonMode: string | null = null
+
+export const setEnvironmentWeather = async (season: 'summer' | 'monsoon' | 'winter', muted = false) => {
+  if (muted) {
+    if (envNoise) { envNoise.stop(); envNoise.dispose(); envNoise = null }
+    if (envFilter) { envFilter.dispose(); envFilter = null }
+    currentSeasonMode = null
+    return
+  }
+
+  const Tone = await getTone()
+  await Tone.start()
+
+  if (!envNoise) {
+    envFilter = new Tone.Filter(1000, 'lowpass').toDestination()
+    envNoise = new Tone.Noise('white').connect(envFilter)
+    envNoise.volume.value = -60
+    envNoise.start()
+  }
+
+  if (currentSeasonMode === season) return
+  currentSeasonMode = season
+
+  if (season === 'monsoon') {
+    envNoise.type = 'white'
+    if (envFilter) envFilter.frequency.rampTo(1500, 2)
+    envNoise.volume.rampTo(-15, 2) // Rain sound
+  } else if (season === 'winter') {
+    envNoise.type = 'pink'
+    if (envFilter) envFilter.frequency.rampTo(400, 2)
+    envNoise.volume.rampTo(-10, 2) // Wind sound
+  } else {
+    // Summer (birds are part of background music or quiet)
+    envNoise.volume.rampTo(-60, 2)
+  }
+}
